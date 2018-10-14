@@ -90,13 +90,13 @@ public class UnitCommitmentProblemModel {
         
         // Then we add the terms of the expression.
         for(int j = 0; j < problem.getNPeriods(); j++){
-            objective.addTerm(l[j], problem.getLoadSheddingCost(j));
+            objective.addTerm(l[j], problem.getLoadSheddingCosts()[j]);
         }
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
                 objective.addTerm(c[i][j], 1);
-                objective.addTerm(u[i][j], problem.getCommitmentCost(i));
-                objective.addTerm(p[i][j], problem.getMarginalCost(i));
+                objective.addTerm(u[i][j], problem.getCommitmentCosts()[i]);
+                objective.addTerm(p[i][j], problem.getMarginalCosts()[i]);
             }
         }
         // Finally we tell the model to minimize that 
@@ -127,9 +127,9 @@ public class UnitCommitmentProblemModel {
                 IloLinearNumExpr lhs = model.linearNumExpr();
                 // We add the terms to the linear expression
                 lhs.addTerm(c[i][j], 1);
-                lhs.addTerm(u[i][j], -problem.getStartupCost(i));
+                lhs.addTerm(u[i][j], -problem.getStartupCosts()[i]);
                 if (j>0){
-                    lhs.addTerm(u[i][j-1], problem.getStartupCost(i));
+                    lhs.addTerm(u[i][j-1], problem.getStartupCosts()[i]);
                 }
                 // Finally we add the constraint to the model 
                 constr1b[i][j] = model.addGe(lhs, 0,"StartupCost_"+i+"_"+j);
@@ -182,7 +182,7 @@ public class UnitCommitmentProblemModel {
             }
             lhs.addTerm(l[j], 1);
             // Finally we add the constraint to the model 
-            constr1e[j] = model.addEq(lhs, problem.getPowerDemand(j),"PowerBalance_"+j);
+            constr1e[j] = model.addEq(lhs, problem.getPowerDemands()[j],"PowerBalance_"+j);
         }
         
         // constr1f: Minimum output constraints
@@ -192,7 +192,7 @@ public class UnitCommitmentProblemModel {
                 IloLinearNumExpr lhs = model.linearNumExpr();
                 // We add the terms to the linear expression
                 lhs.addTerm(p[i][j], 1);
-                lhs.addTerm(u[i][j], -problem.getMinimumOutput(i));
+                lhs.addTerm(u[i][j], -problem.getMinimumOutput()[i]);
                 constr1f[i][j] = model.addGe(lhs, 0,"MinimumOutput"+i+"_"+j);
             }
         }
@@ -204,7 +204,7 @@ public class UnitCommitmentProblemModel {
                 IloLinearNumExpr lhs = model.linearNumExpr();
                 // We add the terms to the linear expression
                 lhs.addTerm(p[i][j], 1);
-                lhs.addTerm(u[i][j], -problem.getMaximumOutput(i));
+                lhs.addTerm(u[i][j], -problem.getMaximumOutput()[i]);
                 constr1g[i][j] = model.addLe(lhs, 0,"MaximumOutput_"+i+"_"+j);
             }
         }
@@ -219,7 +219,7 @@ public class UnitCommitmentProblemModel {
                 if (j>0){
                     lhs.addTerm(p[i][j-1], -1);
                 }
-                constr1h[i][j] = model.addLe(lhs, problem.getRampUpLimit(i),"MaximumRampUp_"+i+"_"+j);
+                constr1h[i][j] = model.addLe(lhs, problem.getRampUpLimit()[i],"MaximumRampUp_"+i+"_"+j);
             }
         }
 
@@ -233,7 +233,7 @@ public class UnitCommitmentProblemModel {
                 if (j>0){
                     lhs.addTerm(p[i][j-1], 1);
                 }
-                constr1i[i][j] = model.addLe(lhs, problem.getRampDownLimit(i),"StartupCost_"+i+"_"+j);
+                constr1i[i][j] = model.addLe(lhs, problem.getRampDownLimit()[i],"StartupCost_"+i+"_"+j);
             }
         }
     }
@@ -254,31 +254,22 @@ public class UnitCommitmentProblemModel {
     public void printSolution() throws IloException{
         System.out.println("Solution: ");
         for(int i = 0; i < problem.getNGenerators(); i++){
-            System.out.println("Power outputs for generator"+problem.getGeneratorName(i));
+            System.out.println("Power outputs for generator "+problem.getGeneratorNames()[i]);
             for (int j=0; j<problem.getNPeriods(); j++){
-                System.out.print("T"+j+1+": "+model.getValue(p[i][j]));
-                if (j % 5 == 0){
+                System.out.print("T"+j+": "+model.getValue(p[i][j])+"   ");
+                if (j % 5 == 4){
                     System.out.println();
                 }
             }
+            System.out.println();
+            System.out.println();
         }
     }
     /**
      * Prints the model.
      */
     public void print(){
-        // The method toString returns a human-readable 
-        // summary of the model.
         System.out.println(model.toString());
     }
-    /**
-     * Prints the optimal dual variables associated with the constraints. 
-     * @throws IloException 
-     */
-//    public void printDuals() throws IloException{
-//        for(int j = 1; j <= problem.getNNutrients(); j++){
-//            System.out.println("Dual const "+j+" = "+model.getDual(constr[j-1]));
-//        }
-//    }
-
+    
 }

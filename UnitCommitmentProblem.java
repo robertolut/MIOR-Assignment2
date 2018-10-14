@@ -1,5 +1,9 @@
 package UnitCommitment;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+
 /**
  *
  * @author Luttner
@@ -33,6 +37,65 @@ public class UnitCommitmentProblem {
     private final double powerDemands[];
 
     // Constructors
+
+    /** Constructor of UnitCommitmentProblem from files
+     *
+     * @param nGenerators
+     * @param nPeriods
+     * @param generatorFileName
+     * @param demandsFileName
+     * @param loadSheddingCosts
+     * @throws FileNotFoundException
+     */
+    public UnitCommitmentProblem(int nGenerators, int nPeriods, String generatorFileName, String demandsFileName, double loadSheddingCosts) throws FileNotFoundException {
+        this.nGenerators=nGenerators;
+        this.nPeriods=nPeriods;
+        this.commitmentCosts= new double[nGenerators];
+        this.marginalCosts=new double[nGenerators];
+        this.startupCosts=new double[nGenerators];
+        this.minimumOnTime=new int[nGenerators];
+        this.minimumOffTime=new int[nGenerators];
+        this.minimumOutput=new double[nGenerators];
+        this.maximumOutput=new double[nGenerators];
+        this.rampUpLimit=new double[nGenerators];
+        this.rampDownLimit=new double[nGenerators];
+        this.generatorNames=new String[nGenerators];
+        this.loadSheddingCosts=new double[nGenerators];
+        this.powerDemands=new double[nPeriods];
+        
+        File generatorFile = new File(generatorFileName);
+        Scanner generatorScanner = new Scanner(generatorFile);
+
+        generatorScanner.useLocale(Locale.US);
+
+        generatorScanner.nextLine();
+        generatorScanner.nextLine();
+        for (int i =0; i<nGenerators; i++){
+            this.generatorNames[i]=generatorScanner.next();
+            this.minimumOutput[i]=generatorScanner.nextDouble();
+            this.maximumOutput[i]=generatorScanner.nextDouble();
+            this.startupCosts[i]=generatorScanner.nextDouble();
+            this.commitmentCosts[i]=generatorScanner.nextDouble();
+            this.rampUpLimit[i]=generatorScanner.nextDouble();
+            this.rampDownLimit[i]=rampUpLimit[i];
+            this.minimumOnTime[i]=generatorScanner.nextInt();
+            this.minimumOffTime[i]=generatorScanner.nextInt();
+            this.marginalCosts[i]=generatorScanner.nextDouble();
+            this.loadSheddingCosts[i]=loadSheddingCosts;
+        }
+        generatorScanner.close();
+        
+        File demandsFile = new File(demandsFileName);
+        Scanner demandsScanner = new Scanner(demandsFile);
+        demandsScanner.nextLine();
+        for (int j=0; j<nPeriods; j++){
+            this.powerDemands[j] = demandsScanner.nextDouble();
+        }
+        demandsScanner.close();
+
+    }
+
+
     /**
      * Constructor of a Unit Commitment Problem from its data.
      * @param nGenerators
@@ -163,68 +226,6 @@ public class UnitCommitmentProblem {
         return powerDemands;
     }
 
-    public double getCommitmentCost(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return commitmentCosts[generator];
-    }
-    public double getMarginalCost(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return marginalCosts[generator];
-    }
-    public double getStartupCost(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return startupCosts[generator];
-    }
-    public double getMinimumOutput(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return minimumOutput[generator];
-    }
-    public double getMaximumOutput(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return maximumOutput[generator];
-    }
-    public double getRampUpLimit(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return rampUpLimit[generator];
-    }
-    public double getRampDownLimit(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return rampDownLimit[generator];
-    }
-    public String getGeneratorName(int generator){
-        if(generator < 0 || generator > nGenerators-1){
-            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
-        }
-        return generatorNames[generator];
-    }
-
-    public double getPowerDemand(int period){
-        if(period < 0 || period > nPeriods-1){
-            throw new IllegalArgumentException("The period must be in [ 0,"+(nPeriods-1)+" ]");
-        }
-        return powerDemands[period];
-    }
-    public double getLoadSheddingCost(int period){
-        if(period < 0 || period > nPeriods-1){
-            throw new IllegalArgumentException("The period must be in [ 0,"+(nPeriods-1)+" ]");
-        }
-        return loadSheddingCosts[period];
-    }
-
     public void print(){
         System.out.println("************************");
         System.out.println("Unit Commitment Problem ");
@@ -277,4 +278,6 @@ public class UnitCommitmentProblem {
         }
         System.out.println(" ");
     }
+
+
 }
