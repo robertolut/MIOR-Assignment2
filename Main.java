@@ -28,8 +28,8 @@ public class Main {
         double[] commitmentCosts = new double[nGenerators];
         double[] marginalCosts = new double[nGenerators];
         double[] startupCosts = new double[nGenerators];
-        double[] minimumOnTime = new double[nGenerators];
-        double[] minimumOffTime = new double[nGenerators];
+        int[] minimumOnTime = new int[nGenerators];
+        int[] minimumOffTime = new int[nGenerators];
         double[] minimumOutput = new double[nGenerators];
         double[] maximumOutput = new double[nGenerators];
         double[] rampUpLimit = new double[nGenerators];
@@ -73,8 +73,8 @@ public class Main {
             commitmentCosts[i]=dados[i][3];
             marginalCosts[i]=dados[i][7];
             startupCosts[i]=dados[i][2];
-            minimumOnTime[i]=dados[i][5];
-            minimumOffTime[i]=dados[i][6];
+            minimumOnTime[i]=(int) dados[i][5];
+            minimumOffTime[i]=(int) dados[i][6];
             minimumOutput[i]=dados[i][0];
             maximumOutput[i]=dados[i][1];
             rampUpLimit[i]=dados[i][4];
@@ -86,8 +86,8 @@ public class Main {
 
         UnitCommitmentProblem UCP = new UnitCommitmentProblem(nGenerators, nPeriods, commitmentCosts, marginalCosts, startupCosts, minimumOnTime, minimumOffTime, minimumOutput, maximumOutput, rampUpLimit, rampDownLimit, genNames, loadSheddingCosts, demand);
 
-//        UnitCommitmentProblemModel UCPModel = new UnitCommitmentProblemModel(UCP);
+        UnitCommitmentProblemModel UCPModel = new UnitCommitmentProblemModel(UCP);
         
-//        UCPModel.solve();
+        UCPModel.solve();
     } 
 }

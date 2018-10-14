@@ -21,8 +21,8 @@ public class UnitCommitmentProblem {
     private final double commitmentCosts[];
     private final double marginalCosts[];
     private final double startupCosts[];
-    private final double minimumOnTime[];
-    private final double minimumOffTime[];
+    private final int minimumOnTime[];
+    private final int minimumOffTime[];
     private final double minimumOutput[];
     private final double maximumOutput[];
     private final double rampUpLimit[];
@@ -31,9 +31,6 @@ public class UnitCommitmentProblem {
 
     private final double loadSheddingCosts[];
     private final double powerDemands[];
-
-    private double minimumOnTimeAtT [][];
-    private double minimumOffTimeAtT [][];
 
     // Constructors
     /**
@@ -53,7 +50,7 @@ public class UnitCommitmentProblem {
      * @param loadSheddingCosts
      * @param powerDemands
      */
-    public UnitCommitmentProblem(int nGenerators, int nPeriods, double commitmentCosts[], double marginalCosts[], double startupCosts[], double minimumOnTime[], double minimumOffTime[], double minimumOutput[], double maximumOutput[], double rampUpLimit[], double rampDownLimit[], String generatorNames[], double loadSheddingCosts[], double powerDemands[]) {
+    public UnitCommitmentProblem(int nGenerators, int nPeriods, double commitmentCosts[], double marginalCosts[], double startupCosts[], int minimumOnTime[], int minimumOffTime[], double minimumOutput[], double maximumOutput[], double rampUpLimit[], double rampDownLimit[], String generatorNames[], double loadSheddingCosts[], double powerDemands[]) {
         this.nGenerators=nGenerators;
         this.nPeriods=nPeriods;
         this.commitmentCosts=commitmentCosts;
@@ -68,22 +65,6 @@ public class UnitCommitmentProblem {
         this.generatorNames=generatorNames;
         this.loadSheddingCosts=loadSheddingCosts;
         this.powerDemands=powerDemands;
-        for (int i = 0; i < this.nGenerators; i++){
-            for(int j=0; j< this.nPeriods; j++){
-                if (j+this.minimumOnTime[i]<this.nPeriods){
-                    this.minimumOnTimeAtT[i][j]=this.minimumOnTime[i];                    
-                }
-                else {
-                    this.minimumOnTimeAtT[i][j]=this.nPeriods;
-                }
-                if (j+this.minimumOffTime[i]<this.nPeriods){
-                    this.minimumOffTimeAtT[i][j]=this.minimumOffTime[i];                    
-                }
-                else {
-                    this.minimumOffTimeAtT[i][j]=this.nPeriods;                    
-                }
-            }
-        }
     }
     // Methods 
     /**
@@ -125,14 +106,14 @@ public class UnitCommitmentProblem {
      * Returns the vector of minimum on-times.
      * @return 
      */
-    public double[] getMinimumOnTime() {
+    public int[] getMinimumOnTime() {
         return minimumOnTime;
     }
     /**
      * Returns the vector of minimum off-times.
      * @return 
      */
-    public double[] getMinimumOffTime() {
+    public int[] getMinimumOffTime() {
         return minimumOffTime;
     }
     /**
@@ -181,100 +162,65 @@ public class UnitCommitmentProblem {
     public double[] getPowerDemands() {
         return powerDemands;
     }
-    /**
-     * Returns the matrix of minimum on times at each period.
-     * @return 
-     */
-    public double[][] getMinimumOnTimeAtT() {
-        return minimumOnTimeAtT;
-    }
-    /**
-     * Returns the matrix of minimum off times at each period.
-     * @return 
-     */
-    public double[][] getMinimumOffTimeAtT() {
-        return minimumOffTimeAtT;
-    }
 
     public double getCommitmentCost(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return commitmentCosts[generator];
     }
     public double getMarginalCost(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return marginalCosts[generator];
     }
     public double getStartupCost(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return startupCosts[generator];
     }
     public double getMinimumOutput(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return minimumOutput[generator];
     }
     public double getMaximumOutput(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return maximumOutput[generator];
     }
     public double getRampUpLimit(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return rampUpLimit[generator];
     }
     public double getRampDownLimit(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return rampDownLimit[generator];
     }
     public String getGeneratorName(int generator){
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
+        if(generator < 0 || generator > nGenerators-1){
+            throw new IllegalArgumentException("The generator number must be in [ 0,"+(nGenerators-1)+" ]");
         }
         return generatorNames[generator];
     }
 
-    
-    public double getMinimumOnTimeAtT(int generator, int period) {
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
-        }
-        if(period < 1 || period > nPeriods){
-            throw new IllegalArgumentException("The period must be in [ 1,"+nPeriods+" ]");
-        }
-        return minimumOnTimeAtT[generator][period];
-    }
-
-    public double getMinimumOffTimeAtT(int generator, int period) {
-        if(generator < 1 || generator > nGenerators){
-            throw new IllegalArgumentException("The generator number must be in [ 1,"+nGenerators+" ]");
-        }
-        if(period < 1 || period > nPeriods){
-            throw new IllegalArgumentException("The period must be in [ 1,"+nPeriods+" ]");
-        }
-        return minimumOffTimeAtT[generator][period];
-    }
-
     public double getPowerDemand(int period){
-        if(period < 1 || period > nPeriods){
-            throw new IllegalArgumentException("The period must be in [ 1,"+nPeriods+" ]");
+        if(period < 0 || period > nPeriods-1){
+            throw new IllegalArgumentException("The period must be in [ 0,"+(nPeriods-1)+" ]");
         }
         return powerDemands[period];
     }
     public double getLoadSheddingCost(int period){
-        if(period < 1 || period > nPeriods){
-            throw new IllegalArgumentException("The period must be in [ 1,"+nPeriods+" ]");
+        if(period < 0 || period > nPeriods-1){
+            throw new IllegalArgumentException("The period must be in [ 0,"+(nPeriods-1)+" ]");
         }
         return loadSheddingCosts[period];
     }

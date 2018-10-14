@@ -142,7 +142,7 @@ public class UnitCommitmentProblemModel {
             for(int j = 0; j < problem.getNPeriods(); j++){
                 IloLinearNumExpr lhs = model.linearNumExpr();
                 // We add the terms to the linear expression
-                for(int t=j; t<= problem.getMinimumOnTimeAtT(i,j); t++){
+                for(int t=j; t< minimumOnTimeAtT(i,j); t++){
                     lhs.addTerm(u[i][t], 1);
                     lhs.addTerm(u[i][j], -1);
                     if (j>0){
@@ -160,7 +160,7 @@ public class UnitCommitmentProblemModel {
             for(int j = 0; j < problem.getNPeriods(); j++){
                 IloLinearNumExpr lhs = model.linearNumExpr();
                 // We add the terms to the linear expression
-                for(int t=j; t<= problem.getMinimumOffTimeAtT(i,j); t++){
+                for(int t=j; t< minimumOffTimeAtT(i,j); t++){
                     lhs.addTerm(u[i][t], -1);
                     lhs.addTerm(u[i][j], 1);
                     if (j>0){
@@ -168,7 +168,7 @@ public class UnitCommitmentProblemModel {
                     }
                 }
                 // Finally we add the constraint to the model 
-                constr1d[i][j] = model.addGe(lhs, j-problem.getMinimumOffTimeAtT(i,j),"MinimumOffTime_"+i+"_"+j);
+                constr1d[i][j] = model.addGe(lhs, j-minimumOffTimeAtT(i,j),"MinimumOffTime_"+i+"_"+j);
             }
         }
 
@@ -244,6 +244,12 @@ public class UnitCommitmentProblemModel {
         }else{
             System.out.println("No feasible solution has been found");
         }
+    }
+    private int minimumOnTimeAtT(int generator, int period){
+        return Math.min(period+problem.getMinimumOnTime()[generator]-1, problem.getNPeriods());
+    }
+    private int minimumOffTimeAtT(int generator, int period){
+        return Math.min(period+problem.getMinimumOffTime()[generator]-1, problem.getNPeriods());
     }
     public void printSolution() throws IloException{
         System.out.println("Solution: ");
