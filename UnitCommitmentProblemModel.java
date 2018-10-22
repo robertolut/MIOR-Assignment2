@@ -3,17 +3,14 @@ package UnitCommitment;
 // Necessary imports of classes 
 // which are not in our package
 import ilog.concert.IloException;
+import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
-import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
 /**
  * This class creates the template for objects representing
  * mathematical models for the Unit Commitment Problem.
- * An instance of this class represents the mathematical
- * model for a specific instance of the Diet Problem.
- * Remember: different instance - > different data.
  * @author Luttner
  */
 public class UnitCommitmentProblemModel {
@@ -37,16 +34,8 @@ public class UnitCommitmentProblemModel {
     private final UnitCommitmentProblem problem;
     private final IloNumVar[][] c;
     private final IloNumVar[] l;
-    private final IloNumVar[][] u;
+    private final IloIntVar[][] u;
     private final IloNumVar[][] p;
-    private final IloRange[][] constr1b;
-    private final IloRange[][] constr1c;
-    private final IloRange[][] constr1d;
-    private final IloRange[] constr1e;
-    private final IloRange[][] constr1f;
-    private final IloRange[][] constr1g;
-    private final IloRange[][] constr1h;
-    private final IloRange[][] constr1i;
     
     public UnitCommitmentProblemModel(UnitCommitmentProblem problem) throws IloException{
         // Creates the IloCplex object
@@ -68,7 +57,7 @@ public class UnitCommitmentProblemModel {
         
         c = new IloNumVar[problem.getNGenerators()][problem.getNPeriods()];
         l = new IloNumVar[problem.getNPeriods()];
-        u = new IloNumVar[problem.getNGenerators()][problem.getNPeriods()];
+        u = new IloIntVar[problem.getNGenerators()][problem.getNPeriods()];
         p = new IloNumVar[problem.getNGenerators()][problem.getNPeriods()];
         
         // Now we need to populate the arrays with objects of type IloNumVar.
@@ -108,19 +97,11 @@ public class UnitCommitmentProblemModel {
         // Constraints 1j ... 1m are domain constraints, and are enforced
         // in the setvariable defintion.
         
-        constr1b = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1c = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1d = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1e = new IloRange[problem.getNPeriods()];
-        constr1f = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1g = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1h = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        constr1i = new IloRange[problem.getNGenerators()][problem.getNPeriods()];
-        
-        // Now we build each of the constraint sets, adding the terms to the
+    
+        // We build each of the constraint sets, adding the terms to the
         // linear expression and then add the constraint sets to the model.
 
-        // constr1b: Start-up costs
+        // Constraints 1b: Start-up costs
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -132,11 +113,11 @@ public class UnitCommitmentProblemModel {
                     lhs.addTerm(u[i][j-1], problem.getStartupCosts()[i]);
                 }
                 // Finally we add the constraint to the model 
-                constr1b[i][j] = model.addGe(lhs, 0,"StartupCost_"+i+"_"+j);
+                model.addGe(lhs, 0,"StartupCost_"+i+"_"+j);
             }
         }
 
-        // constr1c: Minimum ontime constraints
+        // Constraints 1c: Minimum ontime constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -150,11 +131,11 @@ public class UnitCommitmentProblemModel {
                     }
                 }
                 // Finally we add the constraint to the model 
-                constr1c[i][j] = model.addGe(lhs, 0,"MinimumOntime_"+i+"_"+j);
+                model.addGe(lhs, 0,"MinimumOntime_"+i+"_"+j);
             }
         }
 
-        // constr1d: Minimum offtime constraints
+        // Constraints 1d: Minimum offtime constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -168,11 +149,11 @@ public class UnitCommitmentProblemModel {
                     }
                 }
                 // Finally we add the constraint to the model 
-                constr1d[i][j] = model.addGe(lhs, j-minimumOffTimeAtT(i,j),"MinimumOffTime_"+i+"_"+j);
+                model.addGe(lhs, j-minimumOffTimeAtT(i,j)-1,"MinimumOffTime_"+i+"_"+j);
             }
         }
 
-        // constr1e: Power balance constraints
+        // Constraints 1e: Power balance constraints
         
         for(int j = 0; j < problem.getNPeriods(); j++){
             IloLinearNumExpr lhs = model.linearNumExpr();
@@ -182,10 +163,10 @@ public class UnitCommitmentProblemModel {
             }
             lhs.addTerm(l[j], 1);
             // Finally we add the constraint to the model 
-            constr1e[j] = model.addEq(lhs, problem.getPowerDemands()[j],"PowerBalance_"+j);
+            model.addEq(lhs, problem.getPowerDemands()[j],"PowerBalance_"+j);
         }
         
-        // constr1f: Minimum output constraints
+        // Constraints 1f: Minimum output constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -193,11 +174,11 @@ public class UnitCommitmentProblemModel {
                 // We add the terms to the linear expression
                 lhs.addTerm(p[i][j], 1);
                 lhs.addTerm(u[i][j], -problem.getMinimumOutput()[i]);
-                constr1f[i][j] = model.addGe(lhs, 0,"MinimumOutput"+i+"_"+j);
+                model.addGe(lhs, 0,"MinimumOutput"+i+"_"+j);
             }
         }
         
-        // constr1g: Maximum output constraints
+        // Constraints 1g: Maximum output constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -205,11 +186,11 @@ public class UnitCommitmentProblemModel {
                 // We add the terms to the linear expression
                 lhs.addTerm(p[i][j], 1);
                 lhs.addTerm(u[i][j], -problem.getMaximumOutput()[i]);
-                constr1g[i][j] = model.addLe(lhs, 0,"MaximumOutput_"+i+"_"+j);
+                model.addLe(lhs, 0,"MaximumOutput_"+i+"_"+j);
             }
         }
 
-        // constr1h: Maximum ramp-up constraints
+        // Constraints 1h: Maximum ramp-up constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -219,11 +200,11 @@ public class UnitCommitmentProblemModel {
                 if (j>0){
                     lhs.addTerm(p[i][j-1], -1);
                 }
-                constr1h[i][j] = model.addLe(lhs, problem.getRampUpLimit()[i],"MaximumRampUp_"+i+"_"+j);
+                model.addLe(lhs, problem.getRampUpLimit()[i],"MaximumRampUp_"+i+"_"+j);
             }
         }
 
-        // constr1g: Maximum ramp-down constraints
+        // Constraints 1i: Maximum ramp-down constraints
         
         for(int i = 0; i < problem.getNGenerators(); i++){
             for(int j = 0; j < problem.getNPeriods(); j++){
@@ -233,7 +214,7 @@ public class UnitCommitmentProblemModel {
                 if (j>0){
                     lhs.addTerm(p[i][j-1], 1);
                 }
-                constr1i[i][j] = model.addLe(lhs, problem.getRampDownLimit()[i],"StartupCost_"+i+"_"+j);
+                model.addLe(lhs, problem.getRampDownLimit()[i],"StartupCost_"+i+"_"+j);
             }
         }
     }
@@ -264,6 +245,7 @@ public class UnitCommitmentProblemModel {
             System.out.println();
             System.out.println();
         }
+        System.out.println("Optimal value: "+model.getObjValue());
     }
     /**
      * Prints the model.
