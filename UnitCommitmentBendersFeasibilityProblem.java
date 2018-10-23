@@ -6,23 +6,33 @@
 package UnitCommitment;
 
 import ilog.concert.IloException;
-import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 
 /**
- *
+ * This class creates the template for objects representing
+ * mathematical models for the Feasibility Subproblem of the Bender's
+ * Decomposition of the Unit Commitment Problem.
  * @author Luttner
  */
 public class UnitCommitmentBendersFeasibilityProblem {
+
     private final IloCplex model;
+
+    // Apart from the variables of the second-stage problem, p and l,
+    // we define the vplus and vminus variables which will be in the
+    // objective function to check for feasibility.
     private final IloNumVar p[][];
     private final IloNumVar l[];
     private final IloNumVar vPlus[][];
     private final IloNumVar vMinus[][];
+
     private final UnitCommitmentProblem problem;
+
+    // The sets of constraints 1e - 1i which will be used in the feasibility
+    // subproblem:
     private final IloRange[] constraints1e;
     private final IloRange[][] constraints1f;
     private final IloRange[][] constraints1g;
@@ -35,9 +45,7 @@ public class UnitCommitmentBendersFeasibilityProblem {
      * @param U a solution to the first-stage problem
      * @throws IloException 
      */
-  
-    
-    public UnitCommitmentBendersFeasibilityProblem(UnitCommitmentProblem problem, int[][] U) throws IloException {
+     public UnitCommitmentBendersFeasibilityProblem(UnitCommitmentProblem problem, int[][] U) throws IloException {
 
         this.problem=problem;
         this.model = new IloCplex();
@@ -181,10 +189,10 @@ public class UnitCommitmentBendersFeasibilityProblem {
      */
     public double getCutConstant() throws IloException{
     	double constant = 0;
-    	for (int j=0; j<problem.getNPeriods(); j++) {
+    	for (int j = 0; j<problem.getNPeriods(); j++) {
     		constant = constant + problem.getPowerDemands()[j]*model.getDual(constraints1e[j]);
         }
-        for (int i=0; i<problem.getNGenerators(); i++){
+        for (int i = 0; i<problem.getNGenerators(); i++){
             for (int j=0; j<problem.getNPeriods(); j++){
     			constant = constant + problem.getRampUpLimit()[i]*model.getDual(constraints1h[i][j]);
     			constant = constant + problem.getRampDownLimit()[i]*model.getDual(constraints1i[i][j]);
@@ -221,7 +229,6 @@ public class UnitCommitmentBendersFeasibilityProblem {
      * Note that once the method end() has been called, the IloCplex object
      * cannot be used (e.g., queried) anymore.
      */
-
     public void end(){
         model.end();
     }

@@ -64,34 +64,33 @@ public class UnitCommitmentProblem {
         this.powerDemands=new double[nPeriods];
         
         File generatorFile = new File(generatorFileName);
-        Scanner generatorScanner = new Scanner(generatorFile);
-
-        generatorScanner.useLocale(Locale.US);
-
-        generatorScanner.nextLine();
-        generatorScanner.nextLine();
-        for (int i =0; i<nGenerators; i++){
-            this.generatorNames[i]=generatorScanner.next();
-            this.minimumOutput[i]=generatorScanner.nextDouble();
-            this.maximumOutput[i]=generatorScanner.nextDouble();
-            this.startupCosts[i]=generatorScanner.nextDouble();
-            this.commitmentCosts[i]=generatorScanner.nextDouble();
-            this.rampUpLimit[i]=generatorScanner.nextDouble();
-            this.rampDownLimit[i]=rampUpLimit[i];
-            this.minimumOnTime[i]=generatorScanner.nextInt();
-            this.minimumOffTime[i]=generatorScanner.nextInt();
-            this.marginalCosts[i]=generatorScanner.nextDouble();
-            this.loadSheddingCosts[i]=loadSheddingCosts;
+        try (Scanner generatorScanner = new Scanner(generatorFile)) {
+            generatorScanner.useLocale(Locale.US);
+            
+            generatorScanner.nextLine();
+            generatorScanner.nextLine();
+            for (int i =0; i<nGenerators; i++){
+                this.generatorNames[i]=generatorScanner.next();
+                this.minimumOutput[i]=generatorScanner.nextDouble();
+                this.maximumOutput[i]=generatorScanner.nextDouble();
+                this.startupCosts[i]=generatorScanner.nextDouble();
+                this.commitmentCosts[i]=generatorScanner.nextDouble();
+                this.rampUpLimit[i]=generatorScanner.nextDouble();
+                this.rampDownLimit[i]=rampUpLimit[i];
+                this.minimumOnTime[i]=generatorScanner.nextInt();
+                this.minimumOffTime[i]=generatorScanner.nextInt();
+                this.marginalCosts[i]=generatorScanner.nextDouble();
+                this.loadSheddingCosts[i]=loadSheddingCosts;
+            }
         }
-        generatorScanner.close();
         
         File demandsFile = new File(demandsFileName);
-        Scanner demandsScanner = new Scanner(demandsFile);
-        demandsScanner.nextLine();
-        for (int j=0; j<nPeriods; j++){
-            this.powerDemands[j] = demandsScanner.nextDouble();
+        try (Scanner demandsScanner = new Scanner(demandsFile)) {
+            demandsScanner.nextLine();
+            for (int j=0; j<nPeriods; j++){
+                this.powerDemands[j] = demandsScanner.nextDouble();
+            }
         }
-        demandsScanner.close();
 
     }
 
@@ -225,6 +224,10 @@ public class UnitCommitmentProblem {
     public double[] getPowerDemands() {
         return powerDemands;
     }
+
+     /**
+     * Prints the problem.
+     */
 
     public void print(){
         System.out.println("************************");

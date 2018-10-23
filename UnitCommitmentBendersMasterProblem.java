@@ -12,17 +12,40 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 /**
- *
+ * This class creates the template for objects representing
+ * mathematical models for the Master Problem of the Bender's Decomposition
+ * of the Unit Commitment Problem.
  * @author Luttner
  */
 public class UnitCommitmentBendersMasterProblem {
 
+    // Every class representing an 
+    // optimization problem must have 
+    // an IloCplex object. This is the
+    // container of the mathematical 
+    // programming elements.
+    // Since we will not modify 
+    // the variables holding the 
+    // model and the problem 
+    // we can make them final.
 
     private final IloCplex model;
+
+    // Stores the problem, the variables and the constraints
+    // in order to access them in the methods of the class
+    // UnitCommitmentProblemModel.
+    // We use 2 different arrays of variables, plus the Phi,
+    // as detailed in the constructor below.
+
+    private final UnitCommitmentProblem problem;
     private final IloIntVar u[][];
     private final IloNumVar c[][];
     private final IloNumVar phi;
-    private final UnitCommitmentProblem problem;
+
+    // We also define arrays for p and l in order to access the final
+    // solution (in the print methods).
+    private double p[][];
+    private double l[];
 
     /**
      * Creates the Master Problem.
@@ -38,6 +61,11 @@ public class UnitCommitmentBendersMasterProblem {
         this.model = new IloCplex();
         
         // 2. Creates the decision variables
+        // We will have two sets of decision variables in our first stage:
+        // one for the startup costs incurred (c),
+        // one for the on/off status of the generators (u),
+        // thus we create two arrays of decision variables,
+        // bidimensional on periods and generators, and one single for "phi".
         this.c = new IloNumVar[problem.getNGenerators()][problem.getNPeriods()];
         this.u = new IloIntVar[problem.getNGenerators()][problem.getNPeriods()];
         
@@ -128,18 +156,44 @@ public class UnitCommitmentBendersMasterProblem {
         }
     }
     
+    /**
+     * Returns the minimum on-time for a generator at a given period
+     * as the function stated in the assignment (2.1). The "-1" on the first
+     * term is not present because the periods go from 0 to n-1, not from
+     * 1 to n as in the assignment description.
+     * @return T_gt^U
+     */
     private int minimumOnTimeAtT(int generator, int period){
-        return Math.min(period+problem.getMinimumOnTime()[generator]-1, problem.getNPeriods());
+        return Math.min(period+problem.getMinimumOnTime()[generator], problem.getNPeriods());
     }
     
+    /**
+     * Returns the minimum off-time for a generator at a given period
+     * as the function stated in the assignment (2.1). The "-1" on the first
+     * term is not present because the periods go from 0 to n-1, not from
+     * 1 to n as in the assignment description.
+     * @return T_gt^D
+     */
     private int minimumOffTimeAtT(int generator, int period){
-        return Math.min(period+problem.getMinimumOffTime()[generator]-1, problem.getNPeriods());
+        return Math.min(period+problem.getMinimumOffTime()[generator], problem.getNPeriods());
     }
 
+    /**
+    * Returns the value of phi at the current B&B integer node.
+    * Outside the Callback class, model.getValue() is used.
+    * @return the value of phi.
+    * @throws IloException 
+    */
     public double getPhi() throws IloException{
         return model.getValue(phi);
     }
 
+    /**
+    * Returns the value of U at the current B&B integer node.
+    * Outside the Callback class, model.getValue() is used.
+    * @return the value of U.
+    * @throws IloException 
+    */
     public int[][] getU() throws IloException {
         int[][] U = new int[problem.getNGenerators()][problem.getNPeriods()];
         for(int i = 0; i < problem.getNGenerators(); i++){
@@ -241,6 +295,10 @@ public class UnitCommitmentBendersMasterProblem {
                     // 3.3. In this case the problem at the current node
                     // is optimal.
                     System.out.println("The current node is optimal");
+                    p = new double[problem.getNGenerators()][problem.getNPeriods()];
+                    p = osp.getP();
+                    l = new double[problem.getNPeriods()];
+                    l = osp.getL();
                 }else{
                     // 3.4. In this case we need an optimality cut. 
                     System.out.println("Generating optimality cut");
@@ -254,16 +312,21 @@ public class UnitCommitmentBendersMasterProblem {
                 }
             }
         }
-      /**
+        /**
         * Returns the value of phi at the current B&B integer node.
+        * Notice the method getValue() is used, not model.getValue().
         * @return the value of phi.
         * @throws IloException 
         */
         public double getPhi() throws IloException{
-           // notice again that we use getValue() and not
-           // model.getValue()
            return getValue(phi);
         }
+        /**
+        * Returns the value of U at the current B&B integer node.
+        * Notice the method getValue() is used, not model.getValue().
+        * @return the value of U.
+        * @throws IloException 
+        */
         public int[][] getU() throws IloException {
             int[][] U = new int[problem.getNGenerators()][problem.getNPeriods()];
             for(int i = 0; i < problem.getNGenerators(); i++){
@@ -286,4 +349,55 @@ public class UnitCommitmentBendersMasterProblem {
         return model.getObjValue();
     }
 
+     /**
+     * Prints the solution found, i.e. the outputs for each generator and
+     * the load sheds at each time period.
+     * @throws IloException
+     */
+    public void printSolution() throws IloException{
+        System.out.println("Solution: ");
+        System.out.println("Load Shedding:");
+        for (int j=0; j<problem.getNPeriods(); j++){
+            System.out.print("T"+j+": "+l[j]+"   ");
+            if (j % 5 == 4){
+                System.out.println();
+            }
+        }
+        System.out.println();
+        System.out.println();
+        for(int i = 0; i < problem.getNGenerators(); i++){
+            System.out.println("Power outputs for generator "+problem.getGeneratorNames()[i]);
+            for (int j=0; j<problem.getNPeriods(); j++){
+                System.out.print("T"+j+": "+p[i][j]+"   ");
+                if (j % 5 == 4){
+                    System.out.println();
+                }
+            }
+            System.out.println();
+            System.out.println();
+        }
+        System.out.println("Optimal value: "+model.getObjValue());
+    }
+
+    /**
+     * Prints the solution found, i.e. the outputs for each generator and
+     * the load sheds at each time period, in CSV, which is more useful for
+     * copying to a spreadsheet and analyzing the data.
+     * @throws IloException
+     */
+    public void printCSVSolution() throws IloException{
+        System.out.print("Load Shed; ");
+        for (int j=0; j<problem.getNPeriods(); j++){
+            System.out.print(l[j]+"; ");
+        }
+        System.out.println();
+        for(int i = 0; i < problem.getNGenerators(); i++){
+            System.out.print(problem.getGeneratorNames()[i]+"; ");
+            for (int j=0; j<problem.getNPeriods(); j++){
+                System.out.print(p[i][j]+"; ");
+            }
+            System.out.println();
+        }
+        System.out.println("Optimal value: "+model.getObjValue());
+    }
 }

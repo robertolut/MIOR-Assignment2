@@ -6,7 +6,6 @@
 package UnitCommitment;
 
 import ilog.concert.IloException;
-import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
@@ -14,14 +13,23 @@ import ilog.cplex.IloCplex;
 
 
 /**
- *
+ * This class creates the template for objects representing
+ * mathematical models for the Optimality Subproblem of the Bender's
+ * Decomposition of the Unit Commitment Problem.
  * @author Luttner
  */
 public class UnitCommitmentBendersOptimalityProblem {
+
     private final IloCplex model;
+    // We define the variables of the second-stage problem, p and l.
+
     private final IloNumVar p[][];
     private final IloNumVar l[];
+
     private final UnitCommitmentProblem problem;
+
+    // The sets of constraints 1e - 1i which will be used in the optimality
+    // subproblem:
     private final IloRange[] constraints1e;
     private final IloRange[][] constraints1f;
     private final IloRange[][] constraints1g;
@@ -142,6 +150,11 @@ public class UnitCommitmentBendersOptimalityProblem {
             }
         }
     }
+
+    /**
+     * Solves the problem.
+     * @throws IloException 
+     */
     public void solve() throws IloException{
         model.setOut(null);
         model.solve();
@@ -157,6 +170,34 @@ public class UnitCommitmentBendersOptimalityProblem {
     }
     
     /**
+     * Returns the current P (needed in the end of the algorithm
+     * for reporting the final solution).
+     * @return P[][]
+     * @throws IloException 
+     */
+    public double[][] getP() throws IloException {
+        double P[][] = new double[problem.getNGenerators()][problem.getNPeriods()];
+        for (int i = 0; i<problem.getNGenerators(); i++){
+            for (int j = 0; j<problem.getNPeriods(); j++){
+                P[i][j] = model.getValue(p[i][j]);
+            }
+        }
+        return P;
+    }
+    /**
+     * Returns the current L (needed in the end of the algorithm
+     * for reporting the final solution).
+     * @return L[]
+     * @throws IloException 
+     */
+    public double[] getL() throws IloException {
+        double L[] = new double[problem.getNPeriods()];
+        for (int j = 0; j<problem.getNPeriods(); j++){
+            L[j] = model.getValue(l[j]);
+        }
+        return L;
+    }
+    /**
      * Returns the constant part of the optimality cut.
      * That is, the part of the cut not dependent on u.
      * This is given by the constraints 1e, 1h, 1i
@@ -166,11 +207,11 @@ public class UnitCommitmentBendersOptimalityProblem {
      */
     public double getCutConstant() throws IloException{
     	double constant = 0;
-    	for (int j=0; j<problem.getNPeriods(); j++) {
+    	for (int j = 0; j<problem.getNPeriods(); j++) {
     		constant = constant + problem.getPowerDemands()[j]*model.getDual(constraints1e[j]);
         }
-        for (int i=0; i<problem.getNGenerators(); i++){
-            for (int j=0; j<problem.getNPeriods(); j++){
+        for (int i = 0; i<problem.getNGenerators(); i++){
+            for (int j = 0; j<problem.getNPeriods(); j++){
     			constant = constant + problem.getRampUpLimit()[i]*model.getDual(constraints1h[i][j]);
     			constant = constant + problem.getRampDownLimit()[i]*model.getDual(constraints1i[i][j]);
             }

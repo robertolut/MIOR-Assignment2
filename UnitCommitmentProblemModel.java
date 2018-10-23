@@ -28,7 +28,7 @@ public class UnitCommitmentProblemModel {
     // Stores the problem, the variables and the constraints
     // in order to access them in the methods of the class
     // UnitCommitmentProblemModel.
-    // We use 4 different arrays of variables, and 8 sets of constraints,
+    // We use 4 different arrays of variables,
     // as detailed in the constructor below.
     
     private final UnitCommitmentProblem problem;
@@ -51,8 +51,8 @@ public class UnitCommitmentProblemModel {
         // one for the load shed (l),
         // one for the on/off status of the generators (u),
         // and one for the production levels (p),
-        // thus we create three arrays of decision variables,
-        // l being unidimensional on periods and the other two being
+        // thus we create four arrays of decision variables,
+        // l being unidimensional on periods and the other three being
         // bidimensional on periods and generators.
         
         c = new IloNumVar[problem.getNGenerators()][problem.getNPeriods()];
@@ -218,6 +218,12 @@ public class UnitCommitmentProblemModel {
             }
         }
     }
+
+    /** 
+     * Attempts to solve the model - prints the optimal value or
+     * information about infeasibility.
+     * @throws IloException 
+     */
     public void solve() throws IloException{
         boolean has_feasible_solution = model.solve();
         if(has_feasible_solution){
@@ -226,14 +232,44 @@ public class UnitCommitmentProblemModel {
             System.out.println("No feasible solution has been found");
         }
     }
+    /**
+     * Returns the minimum on-time for a generator at a given period
+     * as the function stated in the assignment (2.1). The "-1" on the first
+     * term is not present because the periods go from 0 to n-1, not from
+     * 1 to n as in the assignment description.
+     * @return T_gt^U
+     */
     private int minimumOnTimeAtT(int generator, int period){
-        return Math.min(period+problem.getMinimumOnTime()[generator]-1, problem.getNPeriods());
+        return Math.min(period+problem.getMinimumOnTime()[generator], problem.getNPeriods());
     }
+
+    /**
+     * Returns the minimum off-time for a generator at a given period
+     * as the function stated in the assignment (2.1). The "-1" on the first
+     * term is not present because the periods go from 0 to n-1, not from
+     * 1 to n as in the assignment description.
+     * @return T_gt^D
+     */
     private int minimumOffTimeAtT(int generator, int period){
-        return Math.min(period+problem.getMinimumOffTime()[generator]-1, problem.getNPeriods());
+        return Math.min(period+problem.getMinimumOffTime()[generator], problem.getNPeriods());
     }
-    public void printSolution() throws IloException{
+    
+     /**
+     * Prints the solution found, i.e. the outputs for each generator and
+     * the load sheds at each time period.
+     * @throws IloException
+     */
+        public void printSolution() throws IloException{
         System.out.println("Solution: ");
+        System.out.println("Load Shedding:");
+        for (int j=0; j<problem.getNPeriods(); j++){
+            System.out.print("T"+j+": "+model.getValue(l[j])+"   ");
+            if (j % 5 == 4){
+                System.out.println();
+            }
+        }
+        System.out.println();
+        System.out.println();
         for(int i = 0; i < problem.getNGenerators(); i++){
             System.out.println("Power outputs for generator "+problem.getGeneratorNames()[i]);
             for (int j=0; j<problem.getNPeriods(); j++){
@@ -247,6 +283,29 @@ public class UnitCommitmentProblemModel {
         }
         System.out.println("Optimal value: "+model.getObjValue());
     }
+
+     /**
+     * Prints the solution found, i.e. the outputs for each generator and
+     * the load sheds at each time period, in CSV, which is more useful for
+     * copying to a spreadsheet and analyzing the data.
+     * @throws IloException
+     */
+    public void printCSVSolution() throws IloException{
+        System.out.print("Load Shed; ");
+        for (int j=0; j<problem.getNPeriods(); j++){
+            System.out.print(model.getValue(l[j])+"; ");
+        }
+        System.out.println();
+        for(int i = 0; i < problem.getNGenerators(); i++){
+            System.out.print(problem.getGeneratorNames()[i]+"; ");
+            for (int j=0; j<problem.getNPeriods(); j++){
+                System.out.print(model.getValue(p[i][j])+"; ");
+            }
+            System.out.println();
+        }
+        System.out.println("Optimal value: "+model.getObjValue());
+    }
+
     /**
      * Prints the model.
      */

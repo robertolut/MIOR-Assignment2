@@ -25,23 +25,29 @@ public class Main {
 
         UnitCommitmentProblem UCP = new UnitCommitmentProblem(nGenerators, nPeriods, generatorFile, demandsFile, loadSheddingCost);
 
-        System.out.println("Solving the problem directly:");
-        
-        UnitCommitmentProblemModel UCPModel = new UnitCommitmentProblemModel(UCP);
-        
-        UCPModel.solve();
-        UCPModel.printSolution();
-
-        System.out.println();
         System.out.println("Solving the problem using Bender's Algorithm:");
         System.out.println();
         
         UnitCommitmentBendersMasterProblem UCPMaster = new UnitCommitmentBendersMasterProblem(UCP);
-        
-                
         UCPMaster.solve();
+
         System.out.println(UCPMaster.getObjective());
         
+        System.out.println();
+        System.out.println("Solving the problem directly:");
+        
+        UnitCommitmentProblemModel UCPModel = new UnitCommitmentProblemModel(UCP);
+        UCPModel.solve();
+
+        System.out.println("Solution from Bender's algorithm:");
+        UCPMaster.printSolution();
+
+        System.out.println("Solution from direct algorithm:");
+        UCPModel.printSolution();
+
+        //UCPMaster.printCSVSolution();
+        //UCPModel.printCSVSolution();
+
         
     }
 }
